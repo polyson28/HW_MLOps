@@ -1,0 +1,162 @@
+syntax = "proto3";
+
+package ml_service;
+
+// Сервис для ML операций
+service MLService {
+  // Обучить новую модель
+  rpc Train(TrainRequest) returns (TrainResponse);
+  
+  // Получить список доступных классов моделей
+  rpc ListAvailableModels(Empty) returns (AvailableModelsResponse);
+  
+  // Получить предсказания
+  rpc Predict(PredictRequest) returns (PredictResponse);
+  
+  // Переобучить существующую модель
+  rpc Retrain(RetrainRequest) returns (RetrainResponse);
+  
+  // Удалить модель
+  rpc DeleteModel(DeleteRequest) returns (DeleteResponse);
+  
+  // Получить список обученных моделей
+  rpc ListTrainedModels(Empty) returns (TrainedModelsResponse);
+  
+  // Получить информацию о модели
+  rpc GetModelInfo(ModelInfoRequest) returns (ModelInfoResponse);
+  
+  // Проверка статуса сервиса
+  rpc HealthCheck(Empty) returns (HealthResponse);
+}
+
+// Пустое сообщение
+message Empty {}
+
+// Сообщение для передачи строки
+message StringValue {
+  string value = 1;
+}
+
+// Сообщение для передачи значений (число или строка)
+message Value {
+  oneof kind {
+    double number = 1;
+    string text = 2;
+  }
+}
+
+// Строка данных (один объект)
+message DataRow {
+  repeated Value values = 1;
+}
+
+// Запрос на обучение
+message TrainRequest {
+  string model_class = 1;
+  repeated DataRow X = 2;
+  repeated Value y = 3;
+  map<string, string> hyperparams = 4;  // все параметры передаём как строки
+  repeated string feature_types = 5;     // опционально: "numeric" или "categorical"
+}
+
+// Ответ после обучения
+message TrainResponse {
+  string model_id = 1;
+  string model_class = 2;
+  map<string, string> hyperparams = 3;
+  map<string, double> metrics = 4;
+  string message = 5;
+}
+
+// Запрос на предсказание
+message PredictRequest {
+  string model_id = 1;
+  repeated DataRow X = 2;
+}
+
+// Ответ с предсказаниями
+message PredictResponse {
+  string model_id = 1;
+  repeated Value predictions = 2;
+  repeated ProbabilityRow probabilities = 3;  // опционально
+}
+
+// Строка вероятностей для одного объекта
+message ProbabilityRow {
+  repeated double probs = 1;
+}
+
+// Запрос на переобучение
+message RetrainRequest {
+  string model_id = 1;
+  repeated DataRow X = 2;
+  repeated Value y = 3;
+  map<string, string> hyperparams = 4;  // опционально
+  repeated string feature_types = 5;
+}
+
+// Ответ после переобучения
+message RetrainResponse {
+  string model_id = 1;
+  string model_class = 2;
+  map<string, string> hyperparams = 3;
+  map<string, double> metrics = 4;
+  string message = 5;
+}
+
+// Запрос на удаление
+message DeleteRequest {
+  string model_id = 1;
+  bool hard = 2;
+}
+
+// Ответ после удаления
+message DeleteResponse {
+  string model_id = 1;
+  string message = 2;
+}
+
+// Информация о доступном классе модели
+message ModelClassInfo {
+  string key = 1;
+  string display_name = 2;
+  map<string, string> default_params = 3;
+  string param_schema_json = 4;  // JSON-строка со схемой параметров
+}
+
+// Ответ со списком доступных моделей
+message AvailableModelsResponse {
+  repeated ModelClassInfo models = 1;
+}
+
+// Информация об обученной модели
+message ModelInfo {
+  string id = 1;
+  string model_class = 2;
+  map<string, string> hyperparams = 3;
+  string status = 4;
+  string created_at = 5;
+  string updated_at = 6;
+  map<string, double> metrics = 7;
+}
+
+// Ответ со списком обученных моделей
+message TrainedModelsResponse {
+  repeated ModelInfo models = 1;
+}
+
+// Запрос информации о модели
+message ModelInfoRequest {
+  string model_id = 1;
+}
+
+// Ответ с информацией о модели
+message ModelInfoResponse {
+  ModelInfo info = 1;
+}
+
+// Ответ статуса сервиса
+message HealthResponse {
+  string status = 1;
+  string message = 2;
+}

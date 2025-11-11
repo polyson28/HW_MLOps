@@ -1,0 +1,87 @@
+{
+  "ec1d9927-058d-4f31-a7fc-46cd2ce64282": {
+    "id": "ec1d9927-058d-4f31-a7fc-46cd2ce64282",
+    "model_class": "logistic_regression",
+    "hyperparams": {
+      "C": 1.0,
+      "max_iter": 100,
+      "penalty": "l2",
+      "solver": "lbfgs"
+    },
+    "status": "trained",
+    "created_at": "2025-11-10T19:26:27.609487Z",
+    "updated_at": "2025-11-10T19:26:27.609487Z",
+    "model_path": "models_storage/ec1d9927-058d-4f31-a7fc-46cd2ce64282.pkl",
+    "metrics": {
+      "train_score": 1.0
+    }
+  },
+  "66032b7e-2308-4c5f-9c79-50a03ab607ba": {
+    "id": "66032b7e-2308-4c5f-9c79-50a03ab607ba",
+    "model_class": "logistic_regression",
+    "hyperparams": {
+      "C": 1.0,
+      "max_iter": 100,
+      "penalty": "l2",
+      "solver": "lbfgs"
+    },
+    "status": "trained",
+    "created_at": "2025-11-10T19:29:03.769446Z",
+    "updated_at": "2025-11-10T19:29:03.769446Z",
+    "model_path": "models_storage/66032b7e-2308-4c5f-9c79-50a03ab607ba.pkl",
+    "metrics": {
+      "train_score": 1.0
+    }
+  },
+  "c44aba4c-dbb1-456a-9c53-4b083b721b38": {
+    "id": "c44aba4c-dbb1-456a-9c53-4b083b721b38",
+    "model_class": "logistic_regression",
+    "hyperparams": {
+      "C": 1.0,
+      "max_iter": 100,
+      "penalty": "l2",
+      "solver": "lbfgs"
+    },
+    "status": "trained",
+    "created_at": "2025-11-10T19:32:29.095465Z",
+    "updated_at": "2025-11-10T19:32:29.095465Z",
+    "model_path": "models_storage/c44aba4c-dbb1-456a-9c53-4b083b721b38.pkl",
+    "metrics": {
+      "train_score": 1.0
+    }
+  },
+  "f94076d4-8e2b-4ec2-8e46-b8f09ef7e360": {
+    "id": "f94076d4-8e2b-4ec2-8e46-b8f09ef7e360",
+    "model_class": "logistic_regression",
+    "hyperparams": {
+      "C": 1.0,
+      "max_iter": 100,
+      "penalty": "l2",
+      "solver": "lbfgs"
+    },
+    "status": "trained",
+    "created_at": "2025-11-10T19:55:34.297716Z",
+    "updated_at": "2025-11-10T19:55:34.297716Z",
+    "model_path": "models_storage/f94076d4-8e2b-4ec2-8e46-b8f09ef7e360.pkl",
+    "metrics": {
+      "train_score": 1.0
+    }
+  },
+  "83037a4b-8dea-4564-aea6-89aff6b289e7": {
+    "id": "83037a4b-8dea-4564-aea6-89aff6b289e7",
+    "model_class_key": "logistic_regression",
+    "hyperparams": {
+      "C": 1.0,
+      "max_iter": 100,
+      "penalty": "l2",
+      "solver": "lbfgs"
+    },
+    "status": "trained",
+    "created_at": "2025-11-10T20:05:26.713534Z",
+    "updated_at": "2025-11-10T20:05:26.713534Z",
+    "model_path": "models_storage/83037a4b-8dea-4564-aea6-89aff6b289e7.pkl",
+    "metrics": {
+      "train_score": 1.0
+    }
+  }
+}

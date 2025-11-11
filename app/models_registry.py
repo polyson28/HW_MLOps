@@ -163,18 +163,23 @@ def resolve_model_class(key: str) -> Any:
     return import_string(info.class_path)
 
 def list_available_model_classes() -> List[Mapping[str, Any]]:
-    """получаем список словарей с инфо о доступных классах моделей 
-
-    Returns:
-        List[Mapping[str, Any]]: инфо о доступных моделях 
-    """
+    """получаем список словарей с инфо о доступных классах моделей"""
     result: List[Mapping[str, Any]] = []
     for info in AVAILABLE_MODEL_CLASSES.values():
+        # Конвертируем param_schema, заменяя type: int на type: "int"
+        serializable_schema = {}
+        for param_name, param_info in info.param_schema.items():
+            param_copy = dict(param_info)
+            # Преобразуем класс типа в строку
+            if "type" in param_copy:
+                param_copy["type"] = param_copy["type"].__name__
+            serializable_schema[param_name] = param_copy
+        
         result.append(
             {
                 "key": info.key,
                 "display_name": info.display_name,
-                "hyperparams": info.param_schema,
+                "hyperparams": serializable_schema,  # Используем преобразованную схему
             }
         )
     return result

@@ -1,0 +1,39 @@
+services:
+  rest-api:
+    build: .
+    container_name: ml-service-rest-api
+    command: python rest_api.py
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+    networks:
+      - ml-network
+
+  grpc-server:
+    build: .
+    container_name: ml-service-grpc
+    command: python grpc_service/grpc_server.py
+    ports:
+      - "50051:50051"
+    volumes:
+      - ./storage:/app/storage
+    networks:
+      - ml-network
+
+  dashboard:
+    build: .
+    container_name: ml-service-dashboard
+    command: streamlit run dashboard.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - REST_API_URL=http://rest-api:8000
+    networks:
+      - ml-network
+    depends_on:
+      - rest-api
+
+networks:
+  ml-network:
+    driver: bridge

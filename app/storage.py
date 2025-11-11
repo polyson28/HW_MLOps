@@ -17,7 +17,7 @@ logger = logging.getLogger("ml_service")
 class ModelMetadata:
     """описание сохраненной модели 
     id: уникальный идентификатор модели
-    model_class: ключ класса модели 
+    model_class_key: ключ класса модели 
     hyperparams: гиперпараметры, с которыми модель обучена
     status: статус модели: "trained" / "deleted" / ...
     created_at: ISO-строка с датой/временем создания
@@ -26,7 +26,7 @@ class ModelMetadata:
     metrics: словарь с метриками 
     """
     id: str
-    model_class: str
+    model_class_key: str
     hyperparams: Dict[str, Any]
     status: str
     created_at: str
@@ -113,7 +113,7 @@ class ModelStorage:
 
     def save_new_model(
         self,
-        model_class: str,
+        model_class_key: str,
         hyperparams: Dict[str, Any],
         model_obj: Any,
         metrics: Optional[Dict[str, Any]] = None,
@@ -122,7 +122,7 @@ class ModelStorage:
         """создание нового model_id, сохранение объекта модели и метаданных 
 
         Args:
-            model_class (str): название класса модели 
+            model_class_key (str): название класса модели 
             hyperparams (Dict[str, Any]): словарь с гиперпараметрами модели  
             model_obj (Any): модель 
             metrics (Optional[Dict[str, Any]], optional): метрики. Defaults to None.
@@ -149,7 +149,7 @@ class ModelStorage:
         now = datetime.utcnow().isoformat() + "Z"
         meta = ModelMetadata(
             id=model_id,
-            model_class=model_class,
+            model_class_key=model_class_key,
             hyperparams=hyperparams,
             status=status,
             created_at=now,
@@ -165,7 +165,7 @@ class ModelStorage:
         logger.info(
             "Сохранена новая модель (id=%s, class=%s) в файл %s",
             model_id,
-            model_class,
+            model_class_key,
             model_path,
         )
         return meta

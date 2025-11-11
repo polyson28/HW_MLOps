@@ -8,8 +8,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.pipeline import Pipeline
 
-import models_registry
-from storage import storage, ModelMetadata
+from app import models_registry
+from app.storage import storage, ModelMetadata
 
 logger = logging.getLogger("ml_service")
 
@@ -375,7 +375,7 @@ def train_model(
             logger.warning("Не удалось посчитать train_score для модели %s", model_class_key)
 
     meta = storage.save_new_model(
-        model_class=model_class_key,
+        model_class_key=model_class_key,
         hyperparams=params,
         model_obj=model,
         metrics=metrics,
@@ -385,7 +385,7 @@ def train_model(
     logger.info(
         "Обучение модели завершено: id=%s, class=%s, metrics=%s",
         meta.id,
-        meta.model_class,
+        meta.model_class_key,
         meta.metrics,
     )
     return meta
@@ -458,7 +458,7 @@ def retrain_model(
     """
     n_features = _validate_X_and_y(X, y)
     old_meta = storage.get_model_metadata(model_id)
-    model_class_key = old_meta.model_class
+    model_class_key = old_meta.model_class_key
 
     logger.info(
         "Запуск переобучения модели: id=%s, class=%s, n_samples=%d, n_features=%d",
@@ -517,7 +517,7 @@ def retrain_model(
     logger.info(
         "Переобучение модели завершено: id=%s, class=%s, metrics=%s",
         new_meta.id,
-        new_meta.model_class,
+        new_meta.model_class_key,
         new_meta.metrics,
     )
     return new_meta
