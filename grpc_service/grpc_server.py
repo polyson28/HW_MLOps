@@ -5,17 +5,14 @@ import sys
 import json
 from pathlib import Path
 
-# Добавляем корневую директорию и app/ в путь для импорта
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app import ml_core
 from app.models_registry import list_available_model_classes
 
-# Импорт сгенерированных protobuf файлов
 import grpc_service.ml_service_pb2 as ml_pb2
 import grpc_service.ml_service_pb2_grpc as ml_pb2_grpc
 
-# Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"

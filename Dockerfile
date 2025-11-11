@@ -2,15 +2,12 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Установка системных зависимостей
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc g++ curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Копируем зависимости
 COPY pyproject.toml ./
 
-# Устанавливаем зависимости
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir \
     fastapi==0.104.0 \
@@ -25,23 +22,19 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pydantic==2.4.0 \
     requests==2.31.0
 
-# Копируем код
 COPY app/ ./app/
 COPY grpc_service/ ./grpc_service/
 COPY rest_api.py ./
 COPY dashboard.py ./
 
-# Генерация protobuf
 RUN python -m grpc_tools.protoc \
     -I. \
     --python_out=. \
     --grpc_python_out=. \
     grpc_service/ml_service.proto
 
-# Создание директорий
 RUN mkdir -p /app/storage/models /app/storage/metadata
 
-# Добавляем app/ в PYTHONPATH
 ENV PYTHONPATH="/app/app:${PYTHONPATH}"
 
 EXPOSE 8000 50051 8501

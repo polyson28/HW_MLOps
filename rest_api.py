@@ -14,7 +14,6 @@ from app import ml_core
 from app.models_registry import list_available_model_classes
 
 
-
 # система логирования всего приложения
 logging.basicConfig(
     level=logging.INFO, 
