@@ -1,0 +1,135 @@
+############################
+# ОС / файловые менеджеры #
+############################
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Общие временные файлы
+*.swp
+*.swo
+*~
+~$*
+
+###########
+# Python  #
+###########
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Виртуальные окружения
+.venv/
+venv/
+env/
+ENV/
+
+# pyenv
+.python-version
+
+##################
+# Poetry & build #
+##################
+
+# Кэш poetry/pip
+.poetry/
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+*.egg
+
+# build/dist артефакты
+build/
+dist/
+
+########################
+# Линтеры / тесты / CI #
+########################
+
+# pytest
+.pytest_cache/
+
+# coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# mypy / ruff / прочий кэш
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# hypothesis
+.hypothesis/
+
+###########
+# Jupyter #
+###########
+
+.ipynb_checkpoints/
+
+##############
+# IDE / tools#
+##############
+
+# VS Code
+.vscode/
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+###########
+# Docker  #
+###########
+
+# Локальные override-файлы
+docker-compose.override.yml
+
+# Общие логи 
+*.log
+
+######################
+# Streamlit / прочее #
+######################
+
+.streamlit/
+
+###############
+# Проектное   #
+###############
+
+# Не тащим данные в репо
+storage/*
+!storage/.gitkeep
+
+# Не тащим модели в репо
+models_storage/*
+*.pkl
+*.joblib
+!models_storage/.gitkeep
+
+
+#################
+# Разное        #
+#################
+
+# Логи приложения
+logs/
+*.log
+
+# Временные файлы редакторов
+*.tmp
+*.bak
