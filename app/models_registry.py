@@ -1,4 +1,4 @@
-# доступные модели, форматы, параметры 
+# доступные модели, форматы, параметры
 
 from dataclasses import dataclass
 from typing import Any, Dict, Mapping, List
@@ -7,18 +7,20 @@ import importlib
 
 @dataclass
 class ModelClassInfo:
-    """описание доступного класса модели для обучения 
+    """описание доступного класса модели для обучения
     key: ключ, по которому обращаемся к модели
-    display_name: отображаемое в ui имя для читаемости 
-    class_path: путь до класса 
-    default_params: дефольные параметры создания модели, если не указаны пользователем 
-    param_schema: описание настраиваемых гиперпараметров 
+    display_name: отображаемое в ui имя для читаемости
+    class_path: путь до класса
+    default_params: дефольные параметры создания модели, если не указаны пользователем
+    param_schema: описание настраиваемых гиперпараметров
     """
+
     key: str
     display_name: str
     class_path: str
     default_params: Dict[str, Any]
     param_schema: Dict[str, Dict[str, Any]]
+
 
 """
     Импортирует объект по строке вида 'module.submodule.ClassName'.
@@ -29,15 +31,16 @@ class ModelClassInfo:
     :raises ImportError: если импорт не удался или строка пути некорректна.
     """
 
+
 def import_string(path: str) -> Any:
-    """импорт объекта из указанного пути 
+    """импорт объекта из указанного пути
 
     Args:
-        path (str): путь к модели для импорта 
+        path (str): путь к модели для импорта
 
     Raises:
-        ImportError: если импорт не получился 
-        ImportError: если строка пути некорректна 
+        ImportError: если импорт не получился
+        ImportError: если строка пути некорректна
 
     Returns:
         Any: _description_
@@ -55,8 +58,8 @@ def import_string(path: str) -> Any:
             f"Не удалось импортировать {attr_name!r} из модуля {module_path!r}. "
             f"Проверь, что нужная библиотека установлена."
         ) from exc
-        
-        
+
+
 AVAILABLE_MODEL_CLASSES = {
     # модель 1 - градиентный бустинг CatBoostClassifier
     "catboost_classifier": ModelClassInfo(
@@ -89,7 +92,7 @@ AVAILABLE_MODEL_CLASSES = {
                 "description": "Глубина деревьев.",
             },
         },
-    ), 
+    ),
     # модель 2 - логистическая регрессия LogisticRegression
     "logistic_regression": ModelClassInfo(
         key="logistic_regression",
@@ -125,7 +128,7 @@ AVAILABLE_MODEL_CLASSES = {
                 "description": "Алгоритм оптимизации.",
             },
         },
-    )
+    ),
 }
 
 
@@ -133,13 +136,13 @@ def get_model_class_info(key: str) -> ModelClassInfo:
     """вывод инфо по внутреннему ключу модели
 
     Args:
-        key (str): внутренний ключ модели 
+        key (str): внутренний ключ модели
 
     Raises:
-        ValueError: если указано неправильное имя ключа, то выводим доступные 
+        ValueError: если указано неправильное имя ключа, то выводим доступные
 
     Returns:
-        ModelClassInfo: инфо о модели 
+        ModelClassInfo: инфо о модели
     """
     try:
         return AVAILABLE_MODEL_CLASSES[key]
@@ -151,16 +154,17 @@ def get_model_class_info(key: str) -> ModelClassInfo:
 
 
 def resolve_model_class(key: str) -> Any:
-    """получаем класс модели по ключу 
-    Пример: 
+    """получаем класс модели по ключу
+    Пример:
         cls = resolve_model_class("logistic_regression")
         model = cls(**params)
 
     Args:
-        key (str): внутренний  ключ модели 
+        key (str): внутренний  ключ модели
     """
     info = get_model_class_info(key)
     return import_string(info.class_path)
+
 
 def list_available_model_classes() -> List[Mapping[str, Any]]:
     """получаем список словарей с инфо о доступных классах моделей"""
@@ -174,7 +178,7 @@ def list_available_model_classes() -> List[Mapping[str, Any]]:
             if "type" in param_copy:
                 param_copy["type"] = param_copy["type"].__name__
             serializable_schema[param_name] = param_copy
-        
+
         result.append(
             {
                 "key": info.key,

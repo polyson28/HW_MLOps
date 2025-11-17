@@ -15,10 +15,10 @@ logger = logging.getLogger("ml_service")
 
 
 def _to_primitive(value: Any) -> Any:
-    """вспомогательная функция, приводит значение к типу, который сериализуется в json 
+    """вспомогательная функция, приводит значение к типу, который сериализуется в json
 
     Args:
-        value (Any): значение 
+        value (Any): значение
 
     Returns:
         Any: приведенное значение
@@ -29,10 +29,10 @@ def _to_primitive(value: Any) -> Any:
         return value
     try:
         return float(value)
-    except Exception: 
+    except Exception:
         return str(value)
-    
-    
+
+
 def _validate_X_and_y(
     X: Sequence[Sequence[Any]],
     y: Sequence[Any],
@@ -40,13 +40,13 @@ def _validate_X_and_y(
     """проверяет базовую консистентность X и y
 
     Args:
-        X (Sequence[Sequence[Any]]): признаки 
+        X (Sequence[Sequence[Any]]): признаки
         y (Sequence[Any]): таргет
 
     Raises:
-        ValueError: пустая обучеющая выборка 
-        ValueError: длины признаков и таргета не совпадают 
-        ValueError: разное количество признаков у объектов 
+        ValueError: пустая обучеющая выборка
+        ValueError: длины признаков и таргета не совпадают
+        ValueError: разное количество признаков у объектов
 
     Returns:
         int: _description_
@@ -73,18 +73,20 @@ def _validate_X_and_y(
     return n_features
 
 
-def _validate_and_merge_hyperparams(model_class_key: str, user_params: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+def _validate_and_merge_hyperparams(
+    model_class_key: str, user_params: Optional[Dict[str, Any]]
+) -> Dict[str, Any]:
     """вспомогательная функция, валидирует пользовательские гиперпараметры и возвращает итоговый словарь
 
     Args:
-        model_class_key (str): внутренний ключ модели 
-        user_params (Optional[Dict[str, Any]]): параметры модели, введенные пользователем 
+        model_class_key (str): внутренний ключ модели
+        user_params (Optional[Dict[str, Any]]): параметры модели, введенные пользователем
 
     Raises:
-        ValueError: при неподдержке гиперпараметров моделью 
-        ValueError: при невозможности приведения гиперпараметра к правильному типа 
+        ValueError: при неподдержке гиперпараметров моделью
+        ValueError: при невозможности приведения гиперпараметра к правильному типа
         ValueError: при недопустимом значении гиперпараметра (больше / меньше допустимого)
-        ValueError: при попытке ввести неподдерживаемые гиперпараметры 
+        ValueError: при попытке ввести неподдерживаемые гиперпараметры
 
     Returns:
         Dict[str, Any]: итоговый словарь с гиперпараметрами
@@ -146,21 +148,21 @@ def _infer_feature_indices(
     """определяем, какие признаки количественные, а какие категориальные
 
     Args:
-        X (Sequence[Sequence[Any]]): признаки 
+        X (Sequence[Sequence[Any]]): признаки
         feature_types (Optional[Sequence[Optional[str]]]): опциональный список типов для каждого признака
             - 'num', 'numeric', 'float', 'int' => числовой
             - 'cat', 'categorical', 'str', 'string', 'object' => категориальный
             - None => считаем числовым (по умолчанию)
-            
+
     Если feature_types == None:
         - смотрим на типы значений в X (по всем строкам):
             - если все значения либо int/float/bool/None => считаем признак числовым
             - если встречается str или что-то ещё => категориальный
 
     Raises:
-        ValueError: длина типов признаков не совпадает с количеством признаков 
+        ValueError: длина типов признаков не совпадает с количеством признаков
         ValueError: неизвестный тип признака в feature_types
-        ValueError: признаки пустые 
+        ValueError: признаки пустые
 
     Returns:
         Tuple[List[int], List[int]]: списки индексов признаков
@@ -234,8 +236,8 @@ def _build_logistic_pipeline(
 
     Args:
         params (Dict[str, Any]): гиперпараметры для LogisticRegression
-        numeric_indices (List[int]): количественные признаки 
-        cat_indices (List[int]): категориальные признаки 
+        numeric_indices (List[int]): количественные признаки
+        cat_indices (List[int]): категориальные признаки
     """
     transformers = []
 
@@ -277,12 +279,11 @@ def _build_logistic_pipeline(
     return model
 
 
-
 def list_available_model_classes() -> List[Dict[str, Any]]:
-    """возвращает список допустимых классов моделей  
+    """возвращает список допустимых классов моделей
 
     Returns:
-        List[Dict[str, Any]]: словарь со значениями 
+        List[Dict[str, Any]]: словарь со значениями
             - key
             - display_name
             - hyperparams (описание гиперпараметров)
@@ -294,7 +295,7 @@ def list_trained_models() -> List[ModelMetadata]:
     """возвращает список всех моделей (включая помеченные как 'deleted')
 
     Returns:
-        List[ModelMetadata]: список всех моделей 
+        List[ModelMetadata]: список всех моделей
     """
     return storage.list_models()
 
@@ -303,10 +304,10 @@ def get_model_info(model_id: str) -> ModelMetadata:
     """возвращает метаданные конкретной модели по её id
 
     Args:
-        model_id (str): id модели 
+        model_id (str): id модели
 
     Returns:
-        ModelMetadata: метаданные конкретной модели 
+        ModelMetadata: метаданные конкретной модели
     """
     return storage.get_model_metadata(model_id)
 
@@ -318,18 +319,18 @@ def train_model(
     hyperparams: Optional[Dict[str, Any]] = None,
     feature_types: Optional[Sequence[Optional[str]]] = None,
 ) -> ModelMetadata:
-    """обучает новую модель указанного класса и сохраняет ее в хранилище 
+    """обучает новую модель указанного класса и сохраняет ее в хранилище
 
     Args:
-        model_class_key (str): класс модели 
-        X (Sequence[Sequence[float]]): признаки 
+        model_class_key (str): класс модели
+        X (Sequence[Sequence[float]]): признаки
         y (Sequence[Any]): таргет
         hyperparams (Optional[Dict[str, Any]], optional): гиперпараметры. Defaults to None.
         feature_types (Optional[Sequence[Optional[str]]], optional: список типов признаков ('num'/'cat') длиной n_features
             Если None — типы признаков определяются автоматически по типам значений в X
 
     Returns:
-        ModelMetadata: метаданные созданной модели 
+        ModelMetadata: метаданные созданной модели
     """
     n_features = _validate_X_and_y(X, y)
     logger.info(
@@ -372,7 +373,9 @@ def train_model(
             score = model.score(X, y)
             metrics["train_score"] = float(score)
         except Exception:  # noqa: BLE001
-            logger.warning("Не удалось посчитать train_score для модели %s", model_class_key)
+            logger.warning(
+                "Не удалось посчитать train_score для модели %s", model_class_key
+            )
 
     meta = storage.save_new_model(
         model_class_key=model_class_key,
@@ -395,11 +398,11 @@ def predict(
     model_id: str,
     X: Sequence[Sequence[Any]],
 ) -> Dict[str, Any]:
-    """считает предсказания по уже обученной модели 
+    """считает предсказания по уже обученной модели
 
     Args:
         model_id (str): id модели
-        X (Sequence[Sequence[Any]]): признаки 
+        X (Sequence[Sequence[Any]]): признаки
 
     Returns:
         Dict[str, Any]: словарь с предсказаниями {'model_id': <>, 'predictions': <>, 'probabilities': <>}
@@ -422,8 +425,10 @@ def predict(
             result["probabilities"] = [
                 [_to_primitive(p) for p in row] for row in raw_probas
             ]
-        except Exception: 
-            logger.warning("Не удалось получить predict_proba для model_id=%s", model_id)
+        except Exception:
+            logger.warning(
+                "Не удалось получить predict_proba для model_id=%s", model_id
+            )
 
     logger.info("Предсказание успешно выполнено: model_id=%s", model_id)
     return result
@@ -436,8 +441,8 @@ def retrain_model(
     hyperparams: Optional[Dict[str, Any]] = None,
     feature_types: Optional[Sequence[Optional[str]]] = None,
 ) -> ModelMetadata:
-    """переобучает уже созданную модель 
-    
+    """переобучает уже созданную модель
+
     Упрощённый вариант:
         - берём исходный класс модели (из метаданных)
         - валидируем/сливаем гиперпараметры (если hyperparams=None — берём старые)
@@ -447,14 +452,14 @@ def retrain_model(
     То есть фактически "обучение заново" под тем же id.
 
     Args:
-        model_id (str): id модели 
-        X (Sequence[Sequence[Any]]): признаки 
+        model_id (str): id модели
+        X (Sequence[Sequence[Any]]): признаки
         y (Sequence[Any]): таргет
         hyperparams (Optional[Dict[str, Any]], optional): гиперпараметры модели. Defaults to None.
         feature_types (Optional[Sequence[Optional[str]]], optional): типы признаков. Defaults to None.
 
     Returns:
-        ModelMetadata: метаданные модели 
+        ModelMetadata: метаданные модели
     """
     n_features = _validate_X_and_y(X, y)
     old_meta = storage.get_model_metadata(model_id)
@@ -503,7 +508,10 @@ def retrain_model(
             score = model.score(X, y)
             metrics["train_score"] = float(score)
         except Exception:  # noqa: BLE001
-            logger.warning("Не удалось посчитать train_score при переобучении model_id=%s", model_id)
+            logger.warning(
+                "Не удалось посчитать train_score при переобучении model_id=%s",
+                model_id,
+            )
 
     # Обновляем модель в storage
     new_meta = storage.update_existing_model(
@@ -521,13 +529,13 @@ def retrain_model(
         new_meta.metrics,
     )
     return new_meta
-    
-    
+
+
 def delete_model(model_id: str, hard_delete: bool = False) -> None:
-    """удаляет модель с указанным id 
+    """удаляет модель с указанным id
 
     Args:
-        model_id (str): id модели для удаления 
+        model_id (str): id модели для удаления
         hard_delete (bool, optional): если True => запись метаданных полностью удаляется из json. Defaults to False.
     """
     logger.info("Удаление модели: id=%s, hard_delete=%s", model_id, hard_delete)

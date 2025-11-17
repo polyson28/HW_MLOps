@@ -1,12 +1,10 @@
 from fastapi import FastAPI, HTTPException, status
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 import logging
 import uvicorn
 import sys
 from pathlib import Path
-from dataclasses import asdict
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -16,8 +14,7 @@ from app.models_registry import list_available_model_classes
 
 # система логирования всего приложения
 logging.basicConfig(
-    level=logging.INFO, 
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("ml_service")
 
@@ -26,27 +23,34 @@ logger = logging.getLogger("ml_service")
 app = FastAPI(
     title="ML-service API",
     description="API для обучения, управления и использования ML-моделей",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 
 # Pydantic модели для валидации запросов и ответов
 class TrainRequest(BaseModel):
     """Запрос на обучение новой модели"""
-    model_class_key: str = Field(..., description="Класс модели ('catboost' или 'logistic')")
+
+    model_class_key: str = Field(
+        ..., description="Класс модели ('catboost' или 'logistic')"
+    )
     X: List[List[Any]] = Field(..., description="Обучающие данные")
     y: List[Any] = Field(..., description="Таргет")
-    hyperparams: Optional[Dict[str, Any]] = Field(default=None, description="Гиперпараметры модели")
-    feature_types: Optional[List[str]] = Field(default=None, description="Типы признаков: 'numeric' или 'categorical'")
+    hyperparams: Optional[Dict[str, Any]] = Field(
+        default=None, description="Гиперпараметры модели"
+    )
+    feature_types: Optional[List[str]] = Field(
+        default=None, description="Типы признаков: 'numeric' или 'categorical'"
+    )
 
-    @field_validator('X') # специальный декоратор
-    @classmethod # используем, тк валидация происходит до создания объекта: при инициализации Pydantic ещё не создал объект, сначала вызывает валидатор validate_X_not_empty() (тут объекта ещё нет, есть только класс)
+    @field_validator("X")  # специальный декоратор
+    @classmethod  # используем, тк валидация происходит до создания объекта: при инициализации Pydantic ещё не создал объект, сначала вызывает валидатор validate_X_not_empty() (тут объекта ещё нет, есть только класс)
     def validate_X_not_empty(cls, v):
         if not v or not v[0]:
             raise ValueError("X не может быть пустым")
         return v
 
-    @field_validator('y')
+    @field_validator("y")
     @classmethod
     def validate_y_not_empty(cls, v):
         if not v:
@@ -56,19 +60,23 @@ class TrainRequest(BaseModel):
 
 class TrainResponse(BaseModel):
     """Ответ после успешного обучения"""
+
     model_id: str = Field(..., description="Уникальный идентификатор обученной модели")
     model_class_key: str = Field(..., description="Класс модели")
-    hyperparams: Dict[str, Any] = Field(..., description="Использованные гиперпараметры")
+    hyperparams: Dict[str, Any] = Field(
+        ..., description="Использованные гиперпараметры"
+    )
     metrics: Dict[str, Any] = Field(..., description="Метрики обучения")
     message: str = Field(default="Модель успешно обучена")
 
 
 class PredictRequest(BaseModel):
     """Запрос на получение предсказаний"""
+
     model_id: str = Field(..., description="ID модели для предсказания")
     X: List[List[Any]] = Field(..., description="Данные для предсказания")
 
-    @field_validator('X')
+    @field_validator("X")
     @classmethod
     def validate_X_not_empty(cls, v):
         if not v:
@@ -78,27 +86,35 @@ class PredictRequest(BaseModel):
 
 class PredictResponse(BaseModel):
     """Ответ с предсказаниями"""
+
     model_id: str
     predictions: List[Any] = Field(..., description="Предсказания модели")
-    probabilities: Optional[List[List[float]]] = Field(default=None, description="Вероятности классов (если доступны)")
+    probabilities: Optional[List[List[float]]] = Field(
+        default=None, description="Вероятности классов (если доступны)"
+    )
 
 
 class RetrainRequest(BaseModel):
     """Запрос на переобучение существующей модели"""
+
     model_id: str = Field(..., description="ID модели для переобучения")
     X: List[List[Any]] = Field(..., description="Новые обучающие данные")
     y: List[Any] = Field(..., description="Новая целевая переменная")
-    hyperparams: Optional[Dict[str, Any]] = Field(default=None, description="Новые гиперпараметры (опционально)")
-    feature_types: Optional[List[str]] = Field(default=None, description="Типы признаков")
+    hyperparams: Optional[Dict[str, Any]] = Field(
+        default=None, description="Новые гиперпараметры (опционально)"
+    )
+    feature_types: Optional[List[str]] = Field(
+        default=None, description="Типы признаков"
+    )
 
-    @field_validator('X')
+    @field_validator("X")
     @classmethod
     def validate_X_not_empty(cls, v):
         if not v or not v[0]:
             raise ValueError("X не может быть пустым")
         return v
 
-    @field_validator('y')
+    @field_validator("y")
     @classmethod
     def validate_y_not_empty(cls, v):
         if not v:
@@ -108,6 +124,7 @@ class RetrainRequest(BaseModel):
 
 class RetrainResponse(BaseModel):
     """Ответ после переобучения"""
+
     model_id: str
     model_class_key: str
     hyperparams: Dict[str, Any]
@@ -117,12 +134,14 @@ class RetrainResponse(BaseModel):
 
 class DeleteResponse(BaseModel):
     """Ответ после удаления модели"""
+
     model_id: str
     message: str
 
 
 class ModelInfo(BaseModel):
     """Информация о модели"""
+
     id: str
     model_class_key: str
     hyperparams: Dict[str, Any]
@@ -134,6 +153,7 @@ class ModelInfo(BaseModel):
 
 class ModelClassInfo(BaseModel):
     """Информация о доступном классе модели"""
+
     key: str
     display_name: str
     param_schema: Dict[str, Dict[str, Any]]
@@ -141,6 +161,7 @@ class ModelClassInfo(BaseModel):
 
 class HealthResponse(BaseModel):
     """Ответ статуса сервиса"""
+
     status: str
     message: str
 
@@ -152,10 +173,7 @@ async def health_check():
     Проверка статуса сервиса
     Возвращает статус работы API
     """
-    return HealthResponse(
-        status="ok",
-        message="ML Service is running"
-    )
+    return HealthResponse(status="ok", message="ML Service is running")
 
 
 @app.get("/models/available", response_model=List[ModelClassInfo], tags=["Models"])
@@ -171,26 +189,33 @@ async def get_available_models():
             model_info = ModelClassInfo(
                 key=info["key"],
                 display_name=info["display_name"],
-                param_schema=info["hyperparams"]
+                param_schema=info["hyperparams"],
             )
             result.append(model_info)
-        
+
         return result
     except KeyError as e:
-        logger.error(f"Ошибка при получении списка доступных моделей: отсутствует ключ {e}")
+        logger.error(
+            f"Ошибка при получении списка доступных моделей: отсутствует ключ {e}"
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка в конфигурации моделей: отсутствует поле {e}"
+            detail=f"Ошибка в конфигурации моделей: отсутствует поле {e}",
         )
     except Exception as e:
         logger.error(f"Ошибка при получении списка доступных моделей: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Внутренняя ошибка сервера: {str(e)}"
+            detail=f"Внутренняя ошибка сервера: {str(e)}",
         )
 
 
-@app.post("/train", response_model=TrainResponse, status_code=status.HTTP_201_CREATED, tags=["Training"])
+@app.post(
+    "/train",
+    response_model=TrainResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Training"],
+)
 async def train_model(request: TrainRequest):
     """
     Обучить новую модель
@@ -199,35 +224,32 @@ async def train_model(request: TrainRequest):
     """
     try:
         logger.info(f"Начало обучения модели класса '{request.model_class_key}'")
-        
+
         result = ml_core.train_model(
             model_class_key=request.model_class_key,
             X=request.X,
             y=request.y,
             hyperparams=request.hyperparams,
-            feature_types=request.feature_types
+            feature_types=request.feature_types,
         )
-        
+
         logger.info(f"Модель '{result.id}' успешно обучена")
-        
+
         return TrainResponse(
             model_id=result.id,
             model_class_key=result.model_class_key,
             hyperparams=result.hyperparams,
-            metrics=result.metrics
+            metrics=result.metrics,
         )
-        
+
     except ValueError as e:
         logger.warning(f"Ошибка валидации при обучении: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error(f"Ошибка при обучении модели: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Внутренняя ошибка при обучении модели: {str(e)}"
+            detail=f"Внутренняя ошибка при обучении модели: {str(e)}",
         )
 
 
@@ -240,35 +262,26 @@ async def predict(request: PredictRequest):
     """
     try:
         logger.info(f"Запрос предсказания для модели '{request.model_id}'")
-        
-        result = ml_core.predict(
-            model_id=request.model_id,
-            X=request.X
-        )
-        
+
+        result = ml_core.predict(model_id=request.model_id, X=request.X)
+
         return PredictResponse(
             model_id=request.model_id,
             predictions=result["predictions"],
-            probabilities=result.get("probabilities")
+            probabilities=result.get("probabilities"),
         )
-        
+
     except FileNotFoundError as e:
         logger.warning(f"Модель не найдена: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
         logger.warning(f"Ошибка валидации при предсказании: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error(f"Ошибка при предсказании: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Внутренняя ошибка при предсказании: {str(e)}"
+            detail=f"Внутренняя ошибка при предсказании: {str(e)}",
         )
 
 
@@ -281,41 +294,35 @@ async def retrain_model(request: RetrainRequest):
     """
     try:
         logger.info(f"Начало переобучения модели '{request.model_id}'")
-        
+
         result = ml_core.retrain_model(
             model_id=request.model_id,
             X=request.X,
             y=request.y,
             hyperparams=request.hyperparams,
-            feature_types=request.feature_types
+            feature_types=request.feature_types,
         )
-        
+
         logger.info(f"Модель '{request.model_id}' успешно переобучена")
-        
+
         return RetrainResponse(
             model_id=result.id,
             model_class_key=result.model_class_key,
             hyperparams=result.hyperparams,
-            metrics=result.metrics
+            metrics=result.metrics,
         )
-        
+
     except FileNotFoundError as e:
         logger.warning(f"Модель не найдена: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
         logger.warning(f"Ошибка валидации при переобучении: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error(f"Ошибка при переобучении модели: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Внутренняя ошибка при переобучении: {str(e)}"
+            detail=f"Внутренняя ошибка при переобучении: {str(e)}",
         )
 
 
@@ -329,28 +336,22 @@ async def delete_model(model_id: str, hard: bool = False):
     """
     try:
         logger.info(f"Удаление модели '{model_id}' (hard={hard})")
-        
+
         ml_core.delete_model(model_id=model_id, hard_delete=hard)
-        
+
         delete_type = "полностью удалена" if hard else "помечена как удалённая"
         logger.info(f"Модель '{model_id}' {delete_type}")
-        
-        return DeleteResponse(
-            model_id=model_id,
-            message=f"Модель {delete_type}"
-        )
-        
+
+        return DeleteResponse(model_id=model_id, message=f"Модель {delete_type}")
+
     except FileNotFoundError as e:
         logger.warning(f"Модель не найдена: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error(f"Ошибка при удалении модели: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Внутренняя ошибка при удалении: {str(e)}"
+            detail=f"Внутренняя ошибка при удалении: {str(e)}",
         )
 
 
@@ -370,7 +371,7 @@ async def list_models():
                 status=m.status,
                 created_at=m.created_at,
                 updated_at=m.updated_at,
-                metrics=m.metrics
+                metrics=m.metrics,
             )
             for m in models
         ]
@@ -378,7 +379,7 @@ async def list_models():
         logger.error(f"Ошибка при получении списка моделей: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Внутренняя ошибка при получении списка моделей: {str(e)}"
+            detail=f"Внутренняя ошибка при получении списка моделей: {str(e)}",
         )
 
 
@@ -397,27 +398,19 @@ async def get_model_info(model_id: str):
             status=info.status,
             created_at=info.created_at,
             updated_at=info.updated_at,
-            metrics=info.metrics
+            metrics=info.metrics,
         )
     except FileNotFoundError as e:
         logger.warning(f"Модель не найдена: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error(f"Ошибка при получении информации о модели: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Внутренняя ошибка: {str(e)}"
+            detail=f"Внутренняя ошибка: {str(e)}",
         )
 
 
 # Запуск сервера
 if __name__ == "__main__":
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8000,
-        log_level="info"
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
