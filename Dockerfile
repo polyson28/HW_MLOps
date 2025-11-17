@@ -6,21 +6,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc g++ curl && \
     rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml ./
+# Ставим Poetry
+# RUN curl -sSL https://install.python-poetry.org | python3 -
+# бывает что курл может лежать мертвым
+RUN python -m pip install --no-cache-dir "poetry>=2.0.0" && poetry --version
 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-    fastapi==0.104.0 \
-    "uvicorn[standard]==0.24.0" \
-    grpcio==1.59.0 \
-    grpcio-tools==1.59.0 \
-    streamlit==1.28.0 \
-    pandas==2.0.0 \
-    scikit-learn==1.3.0 \
-    catboost==1.2 \
-    joblib==1.3.0 \
-    pydantic==2.4.0 \
-    requests==2.31.0
+
+# Создаем окружение при помощи poetry
+RUN poetry config virtualenvs.create false \
+ && poetry config virtualenvs.in-project false \
+ && poetry config virtualenvs.path /opt/venv
+
+ # Cтавим зависимости через poetry
+COPY pyproject.toml poetry.lock* ./
+RUN poetry install --no-interaction --no-ansi --no-root
 
 COPY app/ ./app/
 COPY grpc_service/ ./grpc_service/
