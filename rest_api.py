@@ -1,12 +1,10 @@
 from fastapi import FastAPI, HTTPException, status
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 import logging
 import uvicorn
 import sys
 from pathlib import Path
-from dataclasses import asdict
 
 sys.path.insert(0, str(Path(__file__).parent))
 

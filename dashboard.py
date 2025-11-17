@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import pandas as pd
-import json
 import os
 from typing import Dict, Any, List, Optional
 import sys
@@ -147,7 +146,7 @@ def parse_csv_to_data(uploaded_file) -> Optional[pd.DataFrame]:
         # Сначала попробуем стандартный разделитель (запятая)
         try:
             df = pd.read_csv(uploaded_file)
-        except:
+        except (pd.errors.ParserError, UnicodeDecodeError):
             # Если не получилось, сбросим указатель и попробуем точку с запятой
             uploaded_file.seek(0)
             df = pd.read_csv(uploaded_file, sep=";")
@@ -619,7 +618,7 @@ elif page == "🔄 Переобучение":
                     )
 
                     if result:
-                        st.success(f"✅ Модель успешно переобучена!")
+                        st.success("✅ Модель успешно переобучена!")
 
                         col1, col2 = st.columns(2)
                         with col1:
@@ -651,7 +650,7 @@ elif page == "🗑️ Удаление модели":
     if selected_model_id:
         model_info = get_model_info(selected_model_id)
         if model_info:
-            st.warning(f"**Внимание!** Вы собираетесь удалить модель:")
+            st.warning("**Внимание!** Вы собираетесь удалить модель:")
             st.write(f"- **ID:** `{model_info['id']}`")
             st.write(f"- **Класс:** {model_info['model_class_key']}")
             st.write(f"- **Статус:** {model_info['status']}")
