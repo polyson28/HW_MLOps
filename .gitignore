@@ -133,3 +133,10 @@ logs/
 # Временные файлы редакторов
 *.tmp
 *.bak
+
+# ClearML server
+clearml_service/logs/
+clearml_service/data/
+clearml_service/agent/
+clearml_service/config/
+*.env
