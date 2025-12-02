@@ -87,3 +87,18 @@ Dockerfile упаковывает приложение, зависимости (
 
 13) Streamlit показывает результаты предсказаний и метрики.
 
+### трекинг экспериментов в ClearML
+1) Запуск контейнера 
+```
+cd clearml_service
+docker compose -f docker-compose.yml up -d
+```
+
+2) После запуска нужно открыть интерфейс `http://localhost:8080/settings/workspace-configuration` 
+- слева меню `User Settings / Workspace`
+- справа блок `ClearML API Credentials` 
+- кнопка `+ Create new credentials`
+
+3) Копируем и вставляем креды в `~/clearml.conf`
+
+Созданные проекты можно посмотреть тут: `http://localhost:8080/dashboard`
