@@ -3,6 +3,7 @@
 from typing import Any, Dict, Sequence, Optional, List, Tuple
 
 import logging
+import os 
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
@@ -11,7 +12,43 @@ from sklearn.pipeline import Pipeline
 from app import models_registry
 from app.storage import storage, ModelMetadata
 
+from clearml import Task
+
 logger = logging.getLogger("ml_service")
+
+def _start_clearml_task(
+    action: str,
+    model_class_key: str,
+    extra_config: Optional[Dict[str, Any]] = None,
+):
+    """
+    Создаёт ClearML Task для обучения/переобучения, если ClearML доступен и настроен.
+    Возвращает объект Task или None, если трекинг недоступен.
+    """
+    if Task is None:
+        return None
+
+    try:
+        task = Task.init(
+            project_name=os.getenv("CLEARML_PROJECT", "HW_MLOps"),
+            task_name=f"{action}_{model_class_key}",
+            task_type=Task.TaskTypes.training,
+        )
+    except Exception as exc:
+        logger.warning("Не удалось инициализировать ClearML Task: %s", exc)
+        return None
+
+    config: Dict[str, Any] = {"model_class_key": model_class_key}
+    if extra_config:
+        config.update(extra_config)
+
+    try:
+        # сохраняем конфиг эксперимента (гиперпараметры, размеры данных и т.п.)
+        task.connect(config, name="config")
+    except Exception as exc:
+        logger.warning("Не удалось отправить конфиг в ClearML: %s", exc)
+
+    return task
 
 
 def _to_primitive(value: Any) -> Any:
@@ -339,6 +376,19 @@ def train_model(
         len(X),
         n_features,
     )
+    
+    task = _start_clearml_task(
+        action="train",
+        model_class_key=model_class_key,
+        extra_config={
+            "hyperparams": hyperparams or {},
+            "feature_types": (
+                list(feature_types) if feature_types is not None else None
+            ),
+            "n_samples": len(X),
+            "n_features": n_features,
+        },
+    )
 
     params = _validate_and_merge_hyperparams(model_class_key, hyperparams)
 
@@ -391,6 +441,30 @@ def train_model(
         meta.model_class_key,
         meta.metrics,
     )
+    
+    if task is not None:
+        try:
+            cm_logger = task.get_logger()
+            for name, value in metrics.items():
+                try:
+                    cm_logger.report_scalar(
+                        title="train_metrics",
+                        series=name,
+                        value=float(value),
+                        iteration=0,
+                    )
+                except Exception:  # noqa: BLE001
+                    logger.warning(
+                        "Не удалось отправить метрику %s в ClearML (train)", name
+                    )
+            try:
+                # просто удобно, чтобы в ClearML было видно id модели
+                task.set_comment(f"model_id={meta.id}")
+            except Exception:
+                pass
+        finally:
+            task.close()
+            
     return meta
 
 
@@ -472,6 +546,18 @@ def retrain_model(
         len(X),
         n_features,
     )
+    
+    task = _start_clearml_task(
+        action="retrain",
+        model_class_key=model_class_key,
+        extra_config={
+            "model_id": model_id,
+            "old_hyperparams": old_meta.hyperparams,
+            "new_hyperparams": hyperparams or old_meta.hyperparams,
+            "n_samples": len(X),
+            "n_features": n_features,
+        },
+    )
 
     # Если новые гиперпараметры не заданы, используем старые
     if hyperparams is None:
@@ -528,6 +614,29 @@ def retrain_model(
         new_meta.model_class_key,
         new_meta.metrics,
     )
+    
+    if task is not None:
+        try:
+            cm_logger = task.get_logger()
+            for name, value in metrics.items():
+                try:
+                    cm_logger.report_scalar(
+                        title="retrain_metrics",
+                        series=name,
+                        value=float(value),
+                        iteration=0,
+                    )
+                except Exception:  # noqa: BLE001
+                    logger.warning(
+                        "Не удалось отправить метрику %s в ClearML (retrain)", name
+                    )
+            try:
+                task.set_comment(f"model_id={new_meta.id}")
+            except Exception:
+                pass
+        finally:
+            task.close()
+            
     return new_meta
 
 
