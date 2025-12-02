@@ -18,7 +18,8 @@ dependencies = [
     "catboost>=1.2",
     "joblib>=1.3.0",
     "pydantic>=2.4.0",
-    "requests>=2.31.0"
+    "requests>=2.31.0",
+    "clearml (>=2.0.2,<3.0.0)"
 ]
 
 
