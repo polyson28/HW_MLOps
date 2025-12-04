@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, Mapping, List
 import importlib
 
+from app.model_specs.catboost_classifier import get_catboost_classifier_info
+from app.model_specs.logistic_regression import get_logistic_regression_info
+
 
 @dataclass
 class ModelClassInfo:
@@ -61,74 +64,11 @@ def import_string(path: str) -> Any:
 
 
 AVAILABLE_MODEL_CLASSES = {
-    # модель 1 - градиентный бустинг CatBoostClassifier
-    "catboost_classifier": ModelClassInfo(
-        key="catboost_classifier",
-        display_name="CatBoostClassifier",
-        class_path="catboost.CatBoostClassifier",
-        default_params={
-            "iterations": 200,
-            "learning_rate": 0.1,
-            "depth": 6,
-            "verbose": False,
-        },
-        param_schema={
-            "iterations": {
-                "type": int,
-                "min": 1,
-                "max": 5000,
-                "description": "Количество итераций бустинга (деревьев).",
-            },
-            "learning_rate": {
-                "type": float,
-                "min": 1e-4,
-                "max": 1.0,
-                "description": "Шаг обучения (learning rate).",
-            },
-            "depth": {
-                "type": int,
-                "min": 1,
-                "max": 16,
-                "description": "Глубина деревьев.",
-            },
-        },
-    ),
-    # модель 2 - логистическая регрессия LogisticRegression
-    "logistic_regression": ModelClassInfo(
-        key="logistic_regression",
-        display_name="LogisticRegression",
-        class_path="sklearn.linear_model.LogisticRegression",
-        default_params={
-            "C": 1.0,
-            "max_iter": 100,
-            "penalty": "l2",
-            "solver": "lbfgs",
-        },
-        param_schema={
-            "C": {
-                "type": float,
-                "min": 1e-6,
-                "max": 1e6,
-                "description": "Обратный коэффициент регуляризации (чем больше, тем слабее регуляризация).",
-            },
-            "max_iter": {
-                "type": int,
-                "min": 10,
-                "max": 10000,
-                "description": "Максимальное число итераций оптимизатора.",
-            },
-            "penalty": {
-                "type": str,
-                "choices": ["l2", "none"],
-                "description": "Тип регуляризации (ограничиваемся 'l2' и 'none' для простоты).",
-            },
-            "solver": {
-                "type": str,
-                "choices": ["lbfgs", "liblinear", "saga"],
-                "description": "Алгоритм оптимизации.",
-            },
-        },
-    ),
+    info.key: info
+    for info in [
+        get_catboost_classifier_info(),
+        get_logistic_regression_info(),
+    ]
 }
 
 

@@ -3,16 +3,19 @@
 from typing import Any, Dict, Sequence, Optional, List, Tuple
 
 import logging
+import os
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.pipeline import Pipeline
 
 from app import models_registry
-from app.storage import storage, ModelMetadata
+from app.storage import ModelStorage, ModelMetadata
 
 logger = logging.getLogger("ml_service")
 
+MODEL_STORAGE_DIR = os.getenv("MODEL_STORAGE_DIR", "/app/storage")
+STORAGE = ModelStorage(base_dir=MODEL_STORAGE_DIR)
 
 def _to_primitive(value: Any) -> Any:
     """вспомогательная функция, приводит значение к типу, который сериализуется в json
@@ -297,7 +300,7 @@ def list_trained_models() -> List[ModelMetadata]:
     Returns:
         List[ModelMetadata]: список всех моделей
     """
-    return storage.list_models()
+    return STORAGE.list_models()
 
 
 def get_model_info(model_id: str) -> ModelMetadata:
@@ -309,7 +312,7 @@ def get_model_info(model_id: str) -> ModelMetadata:
     Returns:
         ModelMetadata: метаданные конкретной модели
     """
-    return storage.get_model_metadata(model_id)
+    return STORAGE.get_model_metadata(model_id)
 
 
 def train_model(
@@ -377,7 +380,7 @@ def train_model(
                 "Не удалось посчитать train_score для модели %s", model_class_key
             )
 
-    meta = storage.save_new_model(
+    meta = STORAGE.save_new_model(
         model_class_key=model_class_key,
         hyperparams=params,
         model_obj=model,
@@ -409,7 +412,7 @@ def predict(
     """
     logger.info("Запрос на предсказание: model_id=%s, n_samples=%d", model_id, len(X))
 
-    model = storage.load_model(model_id)
+    model = STORAGE.load_model(model_id)
 
     raw_preds = model.predict(X)
     predictions = [_to_primitive(p) for p in raw_preds]
@@ -462,7 +465,7 @@ def retrain_model(
         ModelMetadata: метаданные модели
     """
     n_features = _validate_X_and_y(X, y)
-    old_meta = storage.get_model_metadata(model_id)
+    old_meta = STORAGE.get_model_metadata(model_id)
     model_class_key = old_meta.model_class_key
 
     logger.info(
@@ -514,7 +517,7 @@ def retrain_model(
             )
 
     # Обновляем модель в storage
-    new_meta = storage.update_existing_model(
+    new_meta = STORAGE.update_existing_model(
         model_id=model_id,
         model_obj=model,
         hyperparams=params,
@@ -539,5 +542,5 @@ def delete_model(model_id: str, hard_delete: bool = False) -> None:
         hard_delete (bool, optional): если True => запись метаданных полностью удаляется из json. Defaults to False.
     """
     logger.info("Удаление модели: id=%s, hard_delete=%s", model_id, hard_delete)
-    storage.delete_model(model_id, hard_delete=hard_delete)
+    STORAGE.delete_model(model_id, hard_delete=hard_delete)
     logger.info("Модель %s успешно удалена.", model_id)

@@ -98,9 +98,12 @@ class ModelStorage:
         Raises:
             RuntimeError: если не удалось сохранить файл метаданных
         """
+        tmp_path = self._db_path.with_suffix(self._db_path.suffix + ".tmp")
+
         try:
-            with self._db_path.open("w", encoding="utf-8") as f:
+            with tmp_path.open("w", encoding="utf-8") as f:
                 json.dump(self._db, f, ensure_ascii=False, indent=2)
+            tmp_path.replace(self._db_path)
         except OSError as exc:
             logger.exception("Ошибка при записи файла метаданных %s", self._db_path)
             raise RuntimeError(
@@ -314,6 +317,3 @@ class ModelStorage:
             self._save_db()
             logger.info("Модель %s удалена (hard_delete=%s).", model_id, hard_delete)
 
-
-# Глобальный экземпляр хранилища, который можно импортировать в других модулях
-storage = ModelStorage()
