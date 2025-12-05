@@ -1,4 +1,4 @@
-from app.models_registry import ModelClassInfo
+from app.schemas import ModelClassInfo
 
 def get_catboost_classifier_info() -> ModelClassInfo:
     return ModelClassInfo(

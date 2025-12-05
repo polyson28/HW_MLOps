@@ -34,6 +34,9 @@ class ModelMetadata:
     updated_at: str
     model_path: str
     metrics: Dict[str, Any]
+    training_dataset_id: Optional[str] = None
+    training_dataset_dvc_md5: Optional[str] = None
+    training_dataset_dvc_file: Optional[str] = None
 
 
 class ModelStorage:
@@ -134,6 +137,9 @@ class ModelStorage:
         model_obj: Any,
         metrics: Optional[Dict[str, Any]] = None,
         status: str = "trained",
+        training_dataset_id: Optional[str] = None,
+        training_dataset_dvc_md5: Optional[str] = None,
+        training_dataset_dvc_file: Optional[str] = None,
     ) -> ModelMetadata:
         """создание нового model_id, сохранение объекта модели и метаданных
 
@@ -174,6 +180,9 @@ class ModelStorage:
             updated_at=now,
             model_path=str(model_path),
             metrics=metrics or {},
+            training_dataset_id=training_dataset_id,
+            training_dataset_dvc_md5=training_dataset_dvc_md5,
+            training_dataset_dvc_file=training_dataset_dvc_file,
         )
 
         with self._lock:
@@ -195,6 +204,9 @@ class ModelStorage:
         hyperparams: Optional[Dict[str, Any]] = None,
         metrics: Optional[Dict[str, Any]] = None,
         status: Optional[str] = None,
+        training_dataset_id: Optional[str] = None,
+        training_dataset_dvc_md5: Optional[str] = None,
+        training_dataset_dvc_file: Optional[str] = None,
     ) -> ModelMetadata:
         """обновление уже существующей модели (перезаписывание файла pkl и обновление метаданных)
 
@@ -238,6 +250,12 @@ class ModelStorage:
                 meta.metrics = metrics
             if status is not None:
                 meta.status = status
+            if training_dataset_id is not None:
+                meta.training_dataset_id = training_dataset_id
+            if training_dataset_dvc_md5 is not None:
+                meta.training_dataset_dvc_md5 = training_dataset_dvc_md5
+            if training_dataset_dvc_file is not None:
+                meta.training_dataset_dvc_file = training_dataset_dvc_file
 
             meta.updated_at = datetime.utcnow().isoformat() + "Z"
 
