@@ -10,12 +10,20 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.pipeline import Pipeline
 
 from app import models_registry
+from app.dvc_datasets import DVCDatasetManager
 from app.storage import ModelStorage, ModelMetadata
 
 logger = logging.getLogger("ml_service")
+_DVC_MANAGER = None
 
 MODEL_STORAGE_DIR = os.getenv("MODEL_STORAGE_DIR", "/app/storage")
 STORAGE = ModelStorage(base_dir=MODEL_STORAGE_DIR)
+
+def _get_dvc() -> DVCDatasetManager:
+    global _DVC_MANAGER
+    if _DVC_MANAGER is None:
+        _DVC_MANAGER = DVCDatasetManager()
+    return _DVC_MANAGER
 
 def _to_primitive(value: Any) -> Any:
     """вспомогательная функция, приводит значение к типу, который сериализуется в json
@@ -336,6 +344,9 @@ def train_model(
         ModelMetadata: метаданные созданной модели
     """
     n_features = _validate_X_and_y(X, y)
+    logger.info("Calling DVC for Dataset Train versioning")
+    dataset_ref = _get_dvc().save_and_version_xy(X, y)
+    logger.info("Train DVC done dataset_id=%s md5=%s", dataset_ref.dataset_id, dataset_ref.dvc_md5)
     logger.info(
         "Запуск обучения новой модели: class=%s, n_samples=%d, n_features=%d",
         model_class_key,
@@ -386,7 +397,11 @@ def train_model(
         model_obj=model,
         metrics=metrics,
         status="trained",
+        training_dataset_id=dataset_ref.dataset_id,
+        training_dataset_dvc_md5=dataset_ref.dvc_md5,
+        training_dataset_dvc_file=dataset_ref.dvc_file,
     )
+
 
     logger.info(
         "Обучение модели завершено: id=%s, class=%s, metrics=%s",
@@ -467,6 +482,7 @@ def retrain_model(
     n_features = _validate_X_and_y(X, y)
     old_meta = STORAGE.get_model_metadata(model_id)
     model_class_key = old_meta.model_class_key
+    dataset_ref = _get_dvc().save_and_version_xy(X, y)
 
     logger.info(
         "Запуск переобучения модели: id=%s, class=%s, n_samples=%d, n_features=%d",
@@ -523,7 +539,11 @@ def retrain_model(
         hyperparams=params,
         metrics=metrics,
         status="trained",
+        training_dataset_id=dataset_ref.dataset_id,
+        training_dataset_dvc_md5=dataset_ref.dvc_md5,
+        training_dataset_dvc_file=dataset_ref.dvc_file,
     )
+
 
     logger.info(
         "Переобучение модели завершено: id=%s, class=%s, metrics=%s",

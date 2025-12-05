@@ -117,6 +117,7 @@ storage/*
 
 # Не тащим модели в репо
 models_storage/*
+storage/*
 *.pkl
 *.joblib
 !models_storage/.gitkeep
