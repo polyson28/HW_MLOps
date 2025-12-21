@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict
 
+
 @dataclass
 class ModelClassInfo:
     """описание доступного класса модели для обучения

@@ -34,8 +34,14 @@ class DVCDatasetManager:
         self.bucket = os.getenv("S3_BUCKET", "mlops")
         self.endpoint = os.getenv("S3_ENDPOINT_URL", "http://minio:9000")
 
-        logger.info("DVC: init manager repo_dir=%s datasets_dir=%s", self.repo_dir, self.datasets_dir)
-        logger.info("DVC: remote target s3://%s/dvc endpoint=%s", self.bucket, self.endpoint)
+        logger.info(
+            "DVC: init manager repo_dir=%s datasets_dir=%s",
+            self.repo_dir,
+            self.datasets_dir,
+        )
+        logger.info(
+            "DVC: remote target s3://%s/dvc endpoint=%s", self.bucket, self.endpoint
+        )
 
         self._ensure_dvc_ready()
 
@@ -61,7 +67,9 @@ class DVCDatasetManager:
 
         if p.returncode != 0:
             logger.error("DVC: command failed rc=%d: %s", p.returncode, cmd)
-            raise subprocess.CalledProcessError(p.returncode, args, output=p.stdout, stderr=p.stderr)
+            raise subprocess.CalledProcessError(
+                p.returncode, args, output=p.stdout, stderr=p.stderr
+            )
 
         return p.stdout or ""
 
@@ -75,15 +83,21 @@ class DVCDatasetManager:
         out = self._run(["dvc", "remote", "list"])
         if "minio" not in out:
             logger.info("DVC: remote 'minio' not found -> adding and setting default")
-            self._run(["dvc", "remote", "add", "-d", "minio", f"s3://{self.bucket}/dvc"])
-            self._run(["dvc", "remote", "modify", "minio", "endpointurl", self.endpoint])
+            self._run(
+                ["dvc", "remote", "add", "-d", "minio", f"s3://{self.bucket}/dvc"]
+            )
+            self._run(
+                ["dvc", "remote", "modify", "minio", "endpointurl", self.endpoint]
+            )
             self._run(["dvc", "remote", "modify", "minio", "use_ssl", "false"])
         else:
             logger.info("DVC: remote 'minio' exists")
 
         self._run(["dvc", "remote", "default"])
 
-    def save_and_version_xy(self, X: Sequence[Sequence[Any]], y: Sequence[Any]) -> DatasetRef:
+    def save_and_version_xy(
+        self, X: Sequence[Sequence[Any]], y: Sequence[Any]
+    ) -> DatasetRef:
         dataset_id = datetime.utcnow().strftime("%Y%m%d_%H%M%S_") + uuid.uuid4().hex[:8]
         out_dir = self.datasets_dir / dataset_id
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -92,7 +106,12 @@ class DVCDatasetManager:
         df["__target__"] = list(y)
 
         data_path = out_dir / "train.parquet"
-        logger.info("DVC: saving dataset file -> %s (rows=%d, cols=%d)", data_path, len(df), df.shape[1])
+        logger.info(
+            "DVC: saving dataset file -> %s (rows=%d, cols=%d)",
+            data_path,
+            len(df),
+            df.shape[1],
+        )
         df.to_parquet(data_path, index=False)
 
         rel = data_path.relative_to(self.repo_dir)
@@ -100,7 +119,9 @@ class DVCDatasetManager:
         self._run(["dvc", "add", str(rel)])
 
         dvc_path = self.repo_dir / (str(rel) + ".dvc")
-        logger.info("DVC: generated dvc file -> %s (exists=%s)", dvc_path, dvc_path.exists())
+        logger.info(
+            "DVC: generated dvc file -> %s (exists=%s)", dvc_path, dvc_path.exists()
+        )
 
         logger.info("DVC: dvc push (to minio)")
         self._run(["dvc", "push", "-v"])
@@ -109,7 +130,8 @@ class DVCDatasetManager:
         logger.info("DVC: dataset version md5=%s dataset_id=%s", md5, dataset_id)
 
         return DatasetRef(
-            dataset_id=dataset_id, data_path=str(data_path),
+            dataset_id=dataset_id,
+            data_path=str(data_path),
             dvc_file=str(dvc_path),
             dvc_md5=md5,
             created_at=datetime.utcnow().isoformat() + "Z",

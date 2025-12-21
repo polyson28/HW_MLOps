@@ -1,5 +1,6 @@
 from app.schemas import ModelClassInfo
 
+
 def get_logistic_regression_info() -> ModelClassInfo:
     return ModelClassInfo(
         key="logistic_regression",

@@ -19,11 +19,13 @@ _DVC_MANAGER = None
 MODEL_STORAGE_DIR = os.getenv("MODEL_STORAGE_DIR", "/app/storage")
 STORAGE = ModelStorage(base_dir=MODEL_STORAGE_DIR)
 
+
 def _get_dvc() -> DVCDatasetManager:
     global _DVC_MANAGER
     if _DVC_MANAGER is None:
         _DVC_MANAGER = DVCDatasetManager()
     return _DVC_MANAGER
+
 
 def _to_primitive(value: Any) -> Any:
     """вспомогательная функция, приводит значение к типу, который сериализуется в json
@@ -346,7 +348,11 @@ def train_model(
     n_features = _validate_X_and_y(X, y)
     logger.info("Calling DVC for Dataset Train versioning")
     dataset_ref = _get_dvc().save_and_version_xy(X, y)
-    logger.info("Train DVC done dataset_id=%s md5=%s", dataset_ref.dataset_id, dataset_ref.dvc_md5)
+    logger.info(
+        "Train DVC done dataset_id=%s md5=%s",
+        dataset_ref.dataset_id,
+        dataset_ref.dvc_md5,
+    )
     logger.info(
         "Запуск обучения новой модели: class=%s, n_samples=%d, n_features=%d",
         model_class_key,
@@ -401,7 +407,6 @@ def train_model(
         training_dataset_dvc_md5=dataset_ref.dvc_md5,
         training_dataset_dvc_file=dataset_ref.dvc_file,
     )
-
 
     logger.info(
         "Обучение модели завершено: id=%s, class=%s, metrics=%s",
@@ -543,7 +548,6 @@ def retrain_model(
         training_dataset_dvc_md5=dataset_ref.dvc_md5,
         training_dataset_dvc_file=dataset_ref.dvc_file,
     )
-
 
     logger.info(
         "Переобучение модели завершено: id=%s, class=%s, metrics=%s",
