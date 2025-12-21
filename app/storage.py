@@ -334,4 +334,3 @@ class ModelStorage:
 
             self._save_db()
             logger.info("Модель %s удалена (hard_delete=%s).", model_id, hard_delete)
-

@@ -1,5 +1,6 @@
 from app.schemas import ModelClassInfo
 
+
 def get_catboost_classifier_info() -> ModelClassInfo:
     return ModelClassInfo(
         key="catboost_classifier",
